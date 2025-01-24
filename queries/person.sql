@@ -1,1 +1,1 @@
-CREATE SCHEMA alpha
+select * from main.quantitativo;

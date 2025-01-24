@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import kagglehub
+import sqlalchemy as sa
 import sqlite3
 import shutil
 import os
@@ -57,17 +58,33 @@ def kaggle_download(dataset_name, db, schema):
 conn = sqlite3.connect('economics.db')
 
 # file read helper
-def read_sql_file(filepath):
-    with open(filepath, 'r') as file:
-
-    # query = (f"queries\\{filename}.sql")
-        return file.read()
+def read_sql_file(filepath, pd_dataframe):
+    if pd_dataframe:
+        path1 = f"queries\\{filepath}.sql"
+        with open(path1, 'r') as file:
+            return file.read()
+    else:
+        with open(filepath, 'r') as file:
+            return file.read()
 
 # cursor
 def run_query(filename):
     c = conn.cursor()
-    c.execute(read_sql_file(f"queries\\{filename}.sql"))
+    c.execute(read_sql_file(f"queries\\{filename}.sql", False))
     response = c.fetchall()
     conn.commit()
     conn.close()
     return response
+
+# # Cockroachdb
+
+# colect credentials
+uname = os.getenv('uname')
+passwd = os.getenv('passwd')
+host = os.getenv('host')
+port = os.getenv('port')
+dbname = os.getenv('dbname')
+
+# engine
+st_conn_str = f"cockroachdb://{uname}:{passwd}@{host}:{port}/{dbname}"
+cockroach_conn = sa.create_engine(st_conn_str)
