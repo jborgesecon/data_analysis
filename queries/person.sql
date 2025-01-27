@@ -1,1 +1,1 @@
-CREATE SCHEMA alpha
+SELECT * FROM "bronks.info_politicos"

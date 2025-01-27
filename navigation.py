@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 import kagglehub
+import requests
+import sqlalchemy as sa
 import sqlite3
 import shutil
 import os
@@ -9,13 +11,23 @@ import glob
 load_dotenv()
 
 # OBJECTS
-path = os.path.expanduser(os.getenv('database_path'))
+path = 'other_datasets'
 
 all_datasets = {
-    'income_inequality': "soumyodippal000/global-income-inequality-analysis1820-2022",
-    'inflation': "razvanmihaihanghicel/inflation-rates-by-country-and-region-19742019",
-    'food_prices': "alhamomarhotaki/global-food-prices-database-wfp"
+    'kaggle_economics': {
+        'income_inequality': "soumyodippal000/global-income-inequality-analysis1820-2022",
+        'inflation': "razvanmihaihanghicel/inflation-rates-by-country-and-region-19742019",
+        'food_prices': "alhamomarhotaki/global-food-prices-database-wfp"
+    },
+    'ptransp': {
+        'viagens': "https://portaldatransparencia.gov.br/download-de-dados/viagens/{year}",
+        'receitas': "https://portaldatransparencia.gov.br/download-de-dados/receitas/{year}",
+        'orcamento': "https://portaldatransparencia.gov.br/download-de-dados/orcamento-despesa/{year}",
+        'despesas': "https://portaldatransparencia.gov.br/download-de-dados/despesas-execucao/{year}",
+        'licitacoes': "https://portaldatransparencia.gov.br/download-de-dados/licitacoes/{year}"     # 201301
+    }
 }
+
 
 # # LOCAL FILES
 
@@ -49,25 +61,64 @@ def kaggle_download(dataset_name, db, schema):
         print(f"Error: {e}")
         return None
 
+# downloads datasets from Portal da Transparencia
+def ptransp_download(db, base_url, dataset_name, year):
+    destination = f"{path}\\{db}"
+    url = base_url.replace("{year}", str(year))
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        zip_file_path = os.path.join(destination, f"{dataset_name}_{year}.zip")
+
+        with open(zip_file_path, "wb") as zip_file:
+            zip_file.write(response.content)
+
+        print(f"successfully downloaded: {zip_file_path}")
+
+    except Exception as e:
+        print(f'error in {url}: {e}')
+
+    return
 
 # # SQLITE
 
 # crete connection
 # conn = sqlite3.connect(':memory:')
-conn = sqlite3.connect('economics.db')
+conn = sqlite3.connect('economics.db')      # deprecated, use sqlite_conn instead
 
 # file read helper
-def read_sql_file(filepath):
-    with open(filepath, 'r') as file:
+def read_sql_file(filepath, pd_dataframe=True):
+    if pd_dataframe:
+        path1 = f"queries\\{filepath}.sql"
+        with open(path1, 'r') as file:
+            return file.read()
+    else:
+        with open(filepath, 'r') as file:
+            return file.read()
 
-    # query = (f"queries\\{filename}.sql")
-        return file.read()
-
-# cursor
+# cursor (deprecated, using sqlalchemy instead)
 def run_query(filename):
     c = conn.cursor()
-    c.execute(read_sql_file(f"queries\\{filename}.sql"))
+    c.execute(read_sql_file(f"queries\\{filename}.sql", False))
     response = c.fetchall()
     conn.commit()
     conn.close()
     return response
+
+
+# # SQLAlchemy
+
+# colect cockrachdb credentials
+uname = os.getenv('uname')
+passwd = os.getenv('passwd')
+host = os.getenv('host')
+port = os.getenv('port')
+dbname = os.getenv('dbname')
+
+
+# engines
+cockroachdb_conn_str = f"cockroachdb://{uname}:{passwd}@{host}:{port}/{dbname}"
+cockroach_conn = sa.create_engine(cockroachdb_conn_str)
+
+sqlite_conn = sa.create_engine("sqlite:///economics.db")

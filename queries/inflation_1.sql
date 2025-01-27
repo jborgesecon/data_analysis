@@ -1,1 +1,1 @@
-SELECT * FROM main.inflation
+SELECT * FROM kaggle.inflation
