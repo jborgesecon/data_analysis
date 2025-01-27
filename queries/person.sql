@@ -1,1 +1,1 @@
-SELECT * FROM "bronks.info_politicos"
+SELECT * FROM "control.quantitativo"
