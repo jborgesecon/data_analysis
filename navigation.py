@@ -1,7 +1,5 @@
 from dotenv import load_dotenv
 import kagglehub
-import requests
-import sqlalchemy as sa
 import sqlite3
 import shutil
 import os
@@ -88,14 +86,11 @@ def ptransp_download(db, base_url, dataset_name, year):
 conn = sqlite3.connect('economics.db')      # deprecated, use sqlite_conn instead
 
 # file read helper
-def read_sql_file(filepath, pd_dataframe=True):
-    if pd_dataframe:
-        path1 = f"queries\\{filepath}.sql"
-        with open(path1, 'r') as file:
-            return file.read()
-    else:
-        with open(filepath, 'r') as file:
-            return file.read()
+def read_sql_file(filepath):
+    with open(filepath, 'r') as file:
+
+    # query = (f"queries\\{filename}.sql")
+        return file.read()
 
 # cursor (deprecated, using sqlalchemy instead)
 def run_query(filename):
@@ -105,20 +100,3 @@ def run_query(filename):
     conn.commit()
     conn.close()
     return response
-
-
-# # SQLAlchemy
-
-# colect cockrachdb credentials
-uname = os.getenv('uname')
-passwd = os.getenv('passwd')
-host = os.getenv('host')
-port = os.getenv('port')
-dbname = os.getenv('dbname')
-
-
-# engines
-cockroachdb_conn_str = f"cockroachdb://{uname}:{passwd}@{host}:{port}/{dbname}"
-cockroach_conn = sa.create_engine(cockroachdb_conn_str)
-
-sqlite_conn = sa.create_engine("sqlite:///economics.db")
