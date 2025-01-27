@@ -16,24 +16,26 @@ from pyspark.sql.types import FloatType, BooleanType
 
 # start a spark session
 spark = SparkSession.builder.appName('ETL_ptransp').getOrCreate()
-path = "other_datasets\\ptransp_viagens\\*"
-files = glob.glob(path)
-dataframes = []
+print(spark.version)
 
-# for file in files:
-with zipfile.ZipFile(files[-1], 'r') as ref:
-    datasets = ref.namelist()
-    last_csv = datasets[-1]
-    with ref.open(last_csv) as current:
-        df1 = pd.read_csv(current, encoding='latin1', sep=';', dtype='object')
-        spark_df = spark.createDataFrame(df1)
+# path = "other_datasets\\ptransp_viagens\\*"
+# files = glob.glob(path)
+# dataframes = []
 
-        dataframes.append(spark_df)
-    print(f'Processed {last_csv} from {ref}: ok!')
+# # for file in files:
+# with zipfile.ZipFile(files[-1], 'r') as ref:
+#     datasets = ref.namelist()
+#     last_csv = datasets[-1]
+#     with ref.open(last_csv) as current:
+#         df1 = pd.read_csv(current, encoding='latin1', sep=';', dtype='object')
+#         spark_df = spark.createDataFrame(df1)
 
-df = dataframes[0]
-for i in dataframes[1:]:
-    df = df.unionByName(df)
+#         dataframes.append(spark_df)
+#     print(f'Processed {last_csv} from {ref}: ok!')
 
-df.printSchema()
-df.show(5)
+# df = dataframes[0]
+# for i in dataframes[1:]:
+#     df = df.unionByName(df)
+
+# df.printSchema()
+# df.show(5)
